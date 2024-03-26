@@ -45,7 +45,7 @@ export function useCanvas() {
 }
 
 async function gatherElementsInfo() {
-  const rootElement = document.getElementsByTagName('main')[0];
+  const rootElement = document.getElementsByTagName('near-social-viewer')[0];
   const info: any[] = [];
   if (rootElement) {
     for (const child of rootElement.children) {
