@@ -1,55 +1,80 @@
-import { inject } from '@vercel/analytics';
-import "@tldraw/tldraw/tldraw.css";
-import "@/css/style.css"
-import React, { useEffect, useState } from "react";
-import ReactDOM from "react-dom/client";
-import { Default } from "@/components/Default";
 import { Canvas } from "@/components/Canvas";
-import { Toggle } from "@/components/Toggle";
-import { useCanvas } from "@/hooks/useCanvas"
-import { createShapes } from "@/utils";
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { Contact } from "@/components/Contact";
+import { Toggle } from "@/components/Toggle";
+import "@/css/style.css";
+import { useCanvas } from "@/hooks/useCanvas";
+import { createShapes } from "@/utils";
+import "@tldraw/tldraw/tldraw.css";
+import { inject } from "@vercel/analytics";
+import React, { useEffect, useMemo, useState } from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 inject();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(<App />);
 
 function App() {
-
-
-	return (
-		<React.StrictMode>
-			<BrowserRouter>
-				<Routes>
-					<Route path="/" element={<Home />} />
-					<Route path="/card/contact" element={<Contact />} />
-				</Routes>
-			</BrowserRouter>
-		</React.StrictMode>
-	);
-};
+  return (
+    <React.StrictMode>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/card/contact" element={<Contact />} />
+          {/* widget src will come from path */}
+          <Route path="*" element={<Home />} /> 
+        </Routes>
+      </BrowserRouter>
+    </React.StrictMode>
+  );
+}
 
 function Home() {
-	const { isCanvasEnabled, elementsInfo } = useCanvas();
-	const shapes = createShapes(elementsInfo)
-	const [isEditorMounted, setIsEditorMounted] = useState(false);
+  const { isCanvasEnabled, elementsInfo } = useCanvas();
+  const shapes = createShapes(elementsInfo);
+  const [isEditorMounted, setIsEditorMounted] = useState(false);
 
-	useEffect(() => {
-		const handleEditorDidMount = () => {
-			setIsEditorMounted(true);
-		};
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
 
-		window.addEventListener('editorDidMountEvent', handleEditorDidMount);
+  // create props from params
+  const passProps = useMemo(() => {
+    return Array.from(searchParams.entries()).reduce(
+      (props: { [key: string]: string }, [key, value]) => {
+        props[key] = value;
+        return props;
+      },
+      {}
+    );
+  }, [location]);
 
-		return () => {
-			window.removeEventListener('editorDidMountEvent', handleEditorDidMount);
-		};
-	}, []);
+  const path = location.pathname.substring(1);
 
-	return (
-		<><Toggle />
-			<div style={{ zIndex: 999999 }} className={`${isCanvasEnabled && isEditorMounted ? 'transparent' : ''}`}>
-				{<Default />}
-			</div>
-			{isCanvasEnabled && elementsInfo.length > 0 ? <Canvas shapes={shapes} /> : null}</>)
+  useEffect(() => {
+    const handleEditorDidMount = () => {
+      setIsEditorMounted(true);
+    };
+
+    window.addEventListener("editorDidMountEvent", handleEditorDidMount);
+
+    return () => {
+      window.removeEventListener("editorDidMountEvent", handleEditorDidMount);
+    };
+  }, []);
+
+  return (
+    <>
+      <Toggle />
+      <div
+        style={{ zIndex: 999999 }}
+        className={`${isCanvasEnabled && isEditorMounted ? "transparent" : ""}`}
+      >
+        <near-social-viewer
+          src={path || "efiz.near/widget/Default"} // components/Default deployed as widget
+          initialProps={JSON.stringify(passProps)}
+        />
+      </div>
+      {isCanvasEnabled && elementsInfo.length > 0 ? (
+        <Canvas shapes={shapes} />
+      ) : null}
+    </>
+  );
 }
