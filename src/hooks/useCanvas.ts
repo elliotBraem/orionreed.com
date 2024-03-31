@@ -40,33 +40,67 @@ export function useCanvas() {
 async function gatherElementsInfo() {
   const rootElement = document.getElementsByTagName('near-social-viewer')[0];
   const info: any[] = [];
-  if (rootElement) {
-    for (const child of rootElement.children) {
-      if (['BUTTON'].includes(child.tagName)) continue;
-      const rect = child.getBoundingClientRect();
+
+  async function traverse(element: any) {
+    const children = element.children;
+    if (children.length === 0) {
+      const rect = element.getBoundingClientRect();
+      const computedStyle = window.getComputedStyle(element);
       let w = rect.width;
-      if (!['P', 'UL', 'OL'].includes(child.tagName)) {
-        w = measureElementTextWidth(child as HTMLElement);
+      let h = rect.height;
+      if (!['P', 'UL', 'OL', 'IMG'].includes(element.tagName)) {
+        w = measureElementTextWidth(element);
       }
-      // Check if the element is centered
-      const computedStyle = window.getComputedStyle(child);
+      if (element.tagName === 'IMG') {
+        // Check if the image has explicit width and height styles
+        const parentComputedStyle = window.getComputedStyle(element.parentElement!);
+        const parentWidth = parseFloat(parentComputedStyle.width);
+        const parentHeight = parseFloat(parentComputedStyle.height);
+        if (!isNaN(parentWidth) && !isNaN(parentHeight)) {
+          w = parentWidth;
+          h = parentHeight;
+        }
+      } else if (element.tagName === 'SPAN') {
+        // Check if span is displayed as block or inline-block
+        if (computedStyle.display === 'block' || computedStyle.display === 'inline-block') {
+          w = rect.width;
+          h = rect.height;
+        }
+      } else if (element.tagName === 'DIV') {
+        // Check if the div has explicit width and height styles
+        const width = parseFloat(computedStyle.width);
+        const height = parseFloat(computedStyle.height);
+        if (!isNaN(width) && !isNaN(height)) {
+          w = width;
+          h = height;
+        }
+      }
       let x = rect.left; // Default x position
+
+      // Check if the element is centered
       if (computedStyle.display === 'block' && computedStyle.textAlign === 'center') {
         // Adjust x position for centered elements
-        const parentWidth = child.parentElement ? child.parentElement.getBoundingClientRect().width : 0;
-        x = (parentWidth - w) / 2 + window.scrollX + (child.parentElement ? child.parentElement.getBoundingClientRect().left : 0);
+        const parentWidth = element.parentElement ? element.parentElement.getBoundingClientRect().width : 0;
+        x = (parentWidth - w) / 2 + window.scrollX + (element.parentElement ? element.parentElement.getBoundingClientRect().left : 0);
       }
 
       info.push({
-        tagName: child.tagName,
+        tagName: element.tagName,
         x: x,
         y: rect.top,
         w: w,
-        h: rect.height,
-        html: child.outerHTML
+        h: h,
+        html: element.outerHTML
       });
-    };
+    } else {
+      for (const child of children) {
+        await traverse(child);
+      }
+    }
   }
+
+  await traverse(rootElement);
+
   return info;
 }
 
