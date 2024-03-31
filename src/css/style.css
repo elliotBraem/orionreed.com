@@ -7,8 +7,13 @@ body {
   min-height: 100vh;
   min-height: -webkit-fill-available;
   height: 100%;
-  /* touch-action: none; */
-  /* font-family: "Inter", sans-serif; */
+}
+
+.canvas-mode {
+  overflow: hidden;
+  & #toggle-physics {
+    display: block;
+  }
 }
 
 .tldraw__editor {
@@ -24,6 +29,12 @@ body {
 
 .tlui-debug-panel {
   display: none;
+}
+
+.overflowing {
+  box-shadow: 0 0px 16px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  background-color: white;
 }
 
 /* Non-tldraw stuff */
@@ -84,10 +95,9 @@ p a {
   margin-bottom: 0em;
 }
 
-ul {
+ol {
   padding-left: 0;
   font-size: 1rem;
-  list-style: decimal-leading-zero;
   & li::marker {
     color: rgba(0, 0, 0, 0.322);
   }
@@ -95,11 +105,11 @@ ul {
 
 #toggle-physics,
 #toggle-canvas {
-  position: absolute;
-  z-index: 99999;
+  position: fixed;
+  z-index: 999;
   right: 10px;
-  width: 50px;
-  height: 50px;
+  width: 2.5rem;
+  height: 2.5rem;
   background: none;
   border: none;
   cursor: pointer;
@@ -114,17 +124,10 @@ ul {
 }
 #toggle-canvas {
   top: 10px;
-  & img {
-    width: 50%;
-    height: 50%;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
 }
 #toggle-physics {
   top: 60px;
+  display: none;
 }
 
 @media (max-width: 600px) {
@@ -134,7 +137,7 @@ ul {
   header {
     margin-bottom: 1em;
   }
-  ul {
+  ol {
     list-style-position: inside;
   }
 }
@@ -147,9 +150,11 @@ ul {
   p,
   span,
   header,
-  ul {
+  ul,
+  ol {
     margin: 0;
   }
+
   & header {
     font-size: 1.5rem;
   }
@@ -161,8 +166,4 @@ ul {
 .transparent {
   opacity: 0 !important;
   transition: opacity 0.25s ease-in-out;
-}
-
-.hidden {
-  display: none;
 }

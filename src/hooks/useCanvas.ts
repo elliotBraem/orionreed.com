@@ -19,25 +19,18 @@ export function useCanvas() {
         const info = await gatherElementsInfo();
         setElementsInfo(info);
         setIsCanvasEnabled(true);
-        document.getElementById('toggle-physics')?.classList.remove('hidden');
+        document.body.classList.add('canvas-mode');
       } else {
         setElementsInfo([]);
         setIsCanvasEnabled(false);
-        document.getElementById('toggle-physics')?.classList.add('hidden');
+        document.body.classList.remove('canvas-mode');
       }
     };
-    // const enableCanvas = async () => {
-    //   const info = await gatherElementsInfo();
-    //   setElementsInfo(info);
-    //   setIsCanvasEnabled(true);
-    // };
 
     window.addEventListener('toggleCanvasEvent', toggleCanvas);
-    // window.addEventListener('togglePhysicsEvent', enableCanvas);
 
     return () => {
       window.removeEventListener('toggleCanvasEvent', toggleCanvas);
-      // window.removeEventListener('togglePhysicsEvent', enableCanvas);
     };
   }, [isCanvasEnabled]);
 
@@ -52,7 +45,7 @@ async function gatherElementsInfo() {
       if (['BUTTON'].includes(child.tagName)) continue;
       const rect = child.getBoundingClientRect();
       let w = rect.width;
-      if (!['P', 'UL'].includes(child.tagName)) {
+      if (!['P', 'UL', 'OL'].includes(child.tagName)) {
         w = measureElementTextWidth(child as HTMLElement);
       }
       // Check if the element is centered
